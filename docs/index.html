@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-<title>DCSS Vault Editor b1</title>
+<title>DCSS Vault Editor b2</title>
 <meta http-equiv="content-type" content="text/html;charset=utf-8" />
 <style type="text/css">
 body { margin-top: 2em; }
@@ -488,7 +488,7 @@ function addSubstTile(t) {
 }
 
 function updateTransforms() {
-  var transformPane = document.getElementById('opt3');
+  var transformPane = document.getElementById('opt4');
   var contents = document.createElement('div');
   
   var addButtonFunc =
@@ -692,6 +692,9 @@ function updateDES() {
   
   // orient
   if (orient) { des += 'ORIENT: ' + orient + '\n'; }
+
+    var colordef = document.getElementById("color-def").value;
+    if (colordef) { des += "COLOUR: " + colordef + "\n"; }
   
   // arrays
   function end_remove(arr, item) {
@@ -805,15 +808,16 @@ window.onload = function() {
 <body>
 
 <div class="container">
-<h2>DCSS Vault Editor b1</h2>
+<h2>DCSS Vault Editor b2</h2>
 <h4>Originally developed by nooodl_, developed and hosted by rangerofthewest</h4>
 <div class="well">
   <div class="tabbable">
     <ul class="nav nav-tabs">
       <li class="active"><a href="#opt1" data-toggle="tab">Information</a></li>
       <li><a href="#opt2" data-toggle="tab">Tags</a></li>
-      <li><a href="#opt3" data-toggle="tab" >Transforms</a></li>
-      <li><a href="#opt4" data-toggle="tab">DES output</a></li>
+      <li><a href="#opt3" data-toggle="tab" >Tags #2</a></li>
+      <li><a href="#opt4" data-toggle="tab" >Transforms</a></li>
+      <li><a href="#opt5" data-toggle="tab">DES Output</a></li>
     </ul>
     <div class="tab-content">
       <div class="tab-pane active" id="opt1">
@@ -912,9 +916,16 @@ window.onload = function() {
         </table>
       </div>
       <div class="tab-pane" id="opt3">
-        nothing
+        <table class="table">
+          <tr>
+            <td>Color Definitions:
+            <td><input type="text" id="color-def" placeholder="">
+          </table>
       </div>
       <div class="tab-pane" id="opt4">
+        nothing
+      </div>
+      <div class="tab-pane" id="opt5">
         <pre id="des"></pre>
       </div>
     </div>
@@ -943,6 +954,11 @@ window.onload = function() {
       
       <span class="btn-group">
         <button type="button" class="btn btn-small" onclick="matrix.restore()"><i class="icon-backward"></i> Undo</button>
+        <button type="button" class="btn btn-small" onclick="matrix.clear()"><i class="icon-repeat"></i> Clear</button>
+      </span>
+        
+    <span class="btn-group">
+        <button type="button" class="btn btn-small" onclick="updateDES()"><i class="icon-refresh"></i> Refresh DES</button>
       </span>
     </div>
 
@@ -975,8 +991,6 @@ window.onload = function() {
   </div>
 </div>
 
-<button onclick="matrix.fill()">Fill</button>
-<button onclick="matrix.border()">Border</button>
 
 </div>
 
