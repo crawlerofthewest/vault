@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-<title>DCSS Vault Editor b4</title>
+<title>DCSS Vault Editor b5</title>
 <meta http-equiv="content-type" content="text/html;charset=utf-8" />
 <style type="text/css">
 body { margin-top: 2em; }
@@ -48,6 +48,7 @@ drawmap = null;
 panel = null;
 tileset = null;
 click = false;
+rclick = false; 
 
 selected_tile = [0, 0];
 
@@ -364,6 +365,14 @@ function mapPencilMove(e) {
   var cy = selected_tile[1];
   if (click && matrix.data[y][x] != [cx, cy]) {
     matrix.data[y][x] = [cx, cy];
+    drawmap.drawImage(tileset, 0, 0, 32, 32, 32*x, 32*y, 32, 32);
+    drawmap.drawImage(tileset, cx, cy, 32, 32, 32*x, 32*y, 32, 32);
+    updateDES();
+  }
+  if (rclick && matrix.data[y][x] != [0, 0]) {
+    cx = 0;
+    cy = 0;
+    matrix.data[y][x] = [0, 0];
     drawmap.drawImage(tileset, 0, 0, 32, 32, 32*x, 32*y, 32, 32);
     drawmap.drawImage(tileset, cx, cy, 32, 32, 32*x, 32*y, 32, 32);
     updateDES();
@@ -784,12 +793,14 @@ function init() {
   drawmap = document.getElementById('drawmap').getContext('2d');
   
   drawmap.canvas.addEventListener('mousedown', function(e) {
-    click = true;
+    click = e.button === 0;
+    rclick = e.button === 2;
     matrix.backup();
     drawFs[selectedTool()]['mousedown'](e);
   }, false);
   drawmap.canvas.addEventListener('mouseup', function(e) {
     click = false;
+    rclick = false;
     drawFs[selectedTool()]['mouseup'](e);
   }, false);
   drawmap.canvas.addEventListener('mousemove', function(e) {
@@ -811,6 +822,9 @@ window.onload = function() {
   tileset.src = 'tiles.png';
   $('[href=#opt4]').click(updateDES);
   $('[href=#opt3]').click(updateTransforms);
+  $('canvas').bind('contextmenu', function(e){
+    return false;
+}); 
 };
 
 </script>
@@ -928,8 +942,98 @@ window.onload = function() {
       <div class="tab-pane" id="opt3">
         <table class="table">
           <tr>
-            <td>Color Definitions:
-            <td><input type="text" id="color-def" placeholder="">
+              <td>Color Definitions: </td>
+              <td><input type="text" id="color-def" placeholder=""> </td>
+              
+            </tr>
+            <tr>
+              <td>Override Floor Tile: </td>
+              <td>
+                <select>
+                    <option value="na">No Override</option>
+                    <option value="floor_grey_dirt">Grey Dirt Floor</option>
+                    <option value="floor_grey_dirt_b">Grey Dirt Floor (B)</option>
+                    <option value="floor_pebble">Grey Pebble Floor</option>
+                    <option value="floor_pebble_brown">Brown Pebble Floor</option>
+                    <option value="floor_pebble_blue">Blue Pebble Floor</option>
+                    <option value="floor_pebble_green">Green Pebble Floor</option>
+                    <option value="floor_pebble_cyan">Cyan Pebble Floor</option>
+                    <option value="floor_pebble_red">Red Pebble Floor</option>
+                    <option value="floor_pebble_magenta">Magenta Pebble Floor</option>
+                    <option value="floor_pebble_darkgray">Dark Gray Pebble Floor</option>
+                    <option value="floor_pebble_lightblue">Light Blue Pebble Floor</option>
+                    <option value="floor_pebble_lightgreen">Light Green Pebble Floor</option>
+                    <option value="floor_pebble_lightcyan">Light Cyan Pebble Floor</option>
+                    <option value="floor_pebble_lightred">Light Red Pebble Floor</option>
+                    <option value="floor_pebble_lightmagenta">Light Magenta Pebble Floor</option>
+                    <option value="floor_pebble_yellow">Yellow Pebble Floor</option>
+                    <option value="floor_pebble_white">White Pebble Floor</option>
+                    <option value="floor_hall">Hall Floor</option>
+                    <option value="floor_mud">Mud Floor</option>
+                    <option value="floor_ice">Ice Floor</option>
+                    <option value="floor_lair">Lair Floor</option>
+                    <option value="floor_orc">Orc Floor</option>
+                    <option value="floor_moss">Moss Floor</option>
+                    <option value="floor_slime">Slime Floor</option>
+                    <option value="floor_slime_acidic">Acidic Slime Floor</option>
+                    <option value="floor_slime_overlay">Overlay Slime Floor</option>
+                    <option value="floor_snake_a">Snake Floor (A)</option>
+                    <option value="floor_snake_c">Snake Floor (C)</option>
+                    <option value="floor_snake_d">Snake Floor (D)</option>
+                    <option value="floor_swamp">Swamp Floor</option>
+                    <option value="floor_salt">Salt Floor</option>
+                    <option value="floor_spider">Spider Floor</option>
+                    <option value="floor_tomb">Tomb Floor</option>
+                    <option value="floor_vault">Vault Floor</option>
+                    <option value="floor_vines">Vine Floor</option>
+                    <option value="floor_rough">Grey Rough Floor</option>
+                    <option value="floor_rough_brown">Brown Rough Floor</option>
+                    <option value="floor_rough_blue">Blue Rough Floor</option>
+                    <option value="floor_rough_green">Green Rough Floor</option>
+                    <option value="floor_rough_cyan">Cyan Rough Floor</option>
+                    <option value="floor_rough_red">Red Rough Floor</option>
+                    <option value="floor_rough_magenta">Magenta Rough Floor</option>
+                    <option value="floor_rough_darkgray">Dark Gray Rough Floor</option>
+                    <option value="floor_rough_lightblue">Light Blue Rough Floor</option>
+                    <option value="floor_rough_lightgreen">Light Green Rough Floor</option>
+                    <option value="floor_rough_lightcyan">Light Cyan Rough Floor</option>
+                    <option value="floor_rough_lightred">Light Red Rough Floor</option>
+                    <option value="floor_rough_lightmagenta">Light Magenta Rough Floor</option>
+                    <option value="floor_rough_yellow">Yellow Rough Floor</option>
+                    <option value="floor_rough_white">White Rough Floor</option>
+                    <option value="floor_sand">Sand Floor</option>
+                    <option value="floor_cobble_blood">Bloody Cobblestone Floor</option>
+                    <option value="floor_marble">Marble Floor</option>
+                    <option value="floor_sandstone">Sandstone Floor</option>
+                    <option value="floor_volcanic">Volcanic Floor</option>
+                    <option value="floor_crystalline">Crystalline Floor</option>
+                    <option value="floor_grass">Grass Floor</option>
+                    <option value="halo_grass">Halo Grass Floor</option>
+                    <option value="halo_grass2">Halo Grass Floor (B)</option>
+                    <option value="floor_grass_dirt_mix">Grass + Dirt Floor</option>
+                    <option value="floor_nerves_brown">Brown Nerve Floor</option>
+                    <option value="floor_nerves_blue">Blue Nerve Floor</option>
+                    <option value="floor_nerves_green">Green Nerve Floor</option>
+                    <option value="floor_nerves_cyan">Cyan Nerve Floor</option>
+                    <option value="floor_nerves_red">Red Nerve Floor</option>
+                    <option value="floor_nerves_magenta">Magenta Nerve Floor</option>
+                    <option value="floor_nerves_darkgray">Dark Gray Nerve Floor</option>
+                    <option value="floor_nerves_lightblue">Light Blue Nerve Floor</option>
+                    <option value="floor_nerves_lightgreen">Light Green Nerve Floor</option>
+                    <option value="floor_nerves_lightcyan">Light Cyan Nerve Floor</option>
+                    <option value="floor_nerves_lightred">Light Red Nerve Floor</option>
+                    <option value="floor_nerves_lightmagenta">Light Magenta Nerve Floor</option>
+                    <option value="floor_nerves_yellow">Yellow Nerve Floor</option>
+                    <option value="floor_nerves_white">White Nerve Floor</option>
+                </select>
+              </td>
+              <td>Override Wall Tile: </td>
+              <td>
+                <select>
+                </select>
+              </td>
+            </tr>
+            
           </table>
       </div>
       <div class="tab-pane" id="opt4">
