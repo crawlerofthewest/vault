@@ -648,7 +648,6 @@ function updateDES() {
   if (!tagMatches[8]) { tags.push('no_rotate'); }
   if (!tagMatches[9]) { tags.push('no_hmirror'); }
   if (!tagMatches[10]) { tags.push('no_vmirror'); }
-  if (!tagMatches[11]) { tags.push('no_vmirror'); }
   if (tagMatches[22]) { tags.push('ruin'); }
   
   if (tags.length) { des += 'TAGS: ' + tags.join(' ') + '\n'; }
