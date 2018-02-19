@@ -635,28 +635,29 @@ function updateDES() {
     tagMatches.push(!!tagEls[i].classList.contains('active'));
   }
   
+  if (tagMatches[0]) { tags.push('arrival'); }
   if (tagMatches[1]) { tags.push('allow_dup luniq'); }
   if (tagMatches[2]) { tags.push('allow_dup'); }
-  if (tagMatches[3]) { tags.push('no_item_gen'); }
-  if (tagMatches[5]) { tags.push('no_monster_gen'); }
-  if (!tagMatches[7]) { tags.push('no_rotate'); }
-  if (!tagMatches[8]) { tags.push('no_hmirror'); }
-  if (!tagMatches[9]) { tags.push('no_vmirror'); }
+  if (tagMatches[4]) { tags.push('no_item_gen'); }
+  if (tagMatches[6]) { tags.push('no_monster_gen'); }
+  if (!tagMatches[8]) { tags.push('no_rotate'); }
+  if (!tagMatches[9]) { tags.push('no_hmirror'); }
   if (!tagMatches[10]) { tags.push('no_vmirror'); }
-  if (tagMatches[21]) { tags.push('ruin'); }
+  if (!tagMatches[11]) { tags.push('no_vmirror'); }
+  if (tagMatches[22]) { tags.push('ruin'); }
   
   if (tags.length) { des += 'TAGS: ' + tags.join(' ') + '\n'; }
   
   var orient = '';
-  if (tagMatches[11]) { orient = 'northwest'; }
-  if (tagMatches[12]) { orient = 'north'; }
-  if (tagMatches[13]) { orient = 'northeast'; }
-  if (tagMatches[14]) { orient = 'west'; }
-  if (tagMatches[15]) { orient = 'float'; }
-  if (tagMatches[16]) { orient = 'east'; }
-  if (tagMatches[17]) { orient = 'southwest'; }
-  if (tagMatches[18]) { orient = 'south'; }
-  if (tagMatches[19]) { orient = 'southeast'; }
+  if (tagMatches[12]) { orient = 'northwest'; }
+  if (tagMatches[13]) { orient = 'north'; }
+  if (tagMatches[14]) { orient = 'northeast'; }
+  if (tagMatches[15]) { orient = 'west'; }
+  if (tagMatches[16]) { orient = 'float'; }
+  if (tagMatches[17]) { orient = 'east'; }
+  if (tagMatches[18]) { orient = 'southwest'; }
+  if (tagMatches[19]) { orient = 'south'; }
+  if (tagMatches[20]) { orient = 'southeast'; }
   
   // orient
   if (orient) { des += 'ORIENT: ' + orient + '\n'; }
@@ -751,7 +752,8 @@ window.onload = function() {
 <body>
 
 <div class="container">
-<h2>vaultedit</h2>
+<h2>DCSS Vault Editor</h2>
+<h4>Originally developed by nooodl_, developed and hosted by rangerofthewest</h4>
 <div class="well">
   <div class="tabbable">
     <ul class="nav nav-tabs">
@@ -786,6 +788,7 @@ window.onload = function() {
             <td>Occurance:
             <td>
               <div class="btn-group" data-toggle="buttons-radio">
+                <button type="button" class="tag btn">Arrival vault</button>
                 <button type="button" class="tag btn active">Unique per dungeon</button>
                 <button type="button" class="tag btn">Unique per level</button>
                 <button type="button" class="tag btn">Not unique</button>
@@ -801,7 +804,7 @@ window.onload = function() {
             <td>Monster generation:
             <td>
               <div class="btn-group" data-toggle="buttons-radio">
-                <button type="button" class="tag btn"><i class="icon-remove"></i> Disallow</button>
+                <button type="button" class="tag btn"><i class="icon-remove"></i>Disallow</button>
                 <button type="button" class="tag btn active"><i class="icon-ok"></i> Allow</button>
               </div>
           <tr>
