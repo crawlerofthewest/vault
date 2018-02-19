@@ -1,0 +1,911 @@
+﻿<!DOCTYPE HTML>
+<html>
+<head>
+<title>vaultedit</title>
+<meta http-equiv="content-type" content="text/html;charset=utf-8" />
+<style type="text/css">
+body { margin-top: 2em; }
+canvas { image-rendering: -webkit-optimize-contrast; image-rendering: -moz-crisp-edges; }
+</style>
+<!-- JQuery -->
+<script src="http://code.jquery.com/jquery-1.7.2.min.js" integrity="sha256-R7aNzoy2gFrVs+pNJ6+SokH04ppcEqJ0yFLkNGoFALQ=" crossorigin="anonymous"></script>
+
+<!-- Latest compiled and minified CSS -->
+<link href="https://maxcdn.bootstrapcdn.com/twitter-bootstrap/2.3.1/css/bootstrap-combined.min.css" rel="stylesheet" integrity="sha384-AfZ+8dl93QPpFmy0Q1kFwfwG1NBplh51QAw7oZCXARa9KWcl9Xx/7vk16PCDna/T" crossorigin="anonymous">
+
+<script src="https://maxcdn.bootstrapcdn.com/twitter-bootstrap/2.3.1/js/bootstrap.min.js" integrity="sha384-c9p7VJz4n41pctsFNm0SJNtxs1tEtVpbHd6KlMj1gRb5G3hVejCHUMwu+jfyRnNK" crossorigin="anonymous"></script>
+
+<script type="text/javascript">
+
+// for firefox
+function relMouseCoords(event){
+    var totalOffsetX = 0;
+    var totalOffsetY = 0;
+    var canvasX = 0;
+    var canvasY = 0;
+    var currentElement = event.target;
+
+    var editDiv = currentElement.parentNode.parentNode;
+    if (editDiv.id == "edit1") {
+      totalOffsetX -= editDiv.parentNode.scrollLeft;
+      totalOffsetY -= editDiv.parentNode.scrollTop;
+    }
+    
+    
+    do{
+        totalOffsetX += currentElement.offsetLeft;
+        totalOffsetY += currentElement.offsetTop;
+    }
+    while(currentElement = currentElement.offsetParent)
+
+    canvasX = event.pageX - totalOffsetX;
+    canvasY = event.pageY - totalOffsetY;
+
+    return {x:canvasX, y:canvasY}
+}
+
+drawmap = null;
+panel = null;
+tileset = null;
+click = false;
+
+selected_tile = [0, 0];
+
+shape_start = [0, 0];
+
+function selectedTool() {
+  var toolEls = document.getElementsByClassName('tool');
+  var toolNames = ['pencil', 'rect']
+  for (var i = toolEls.length - 1; i >= 0; i--) {
+    if (toolEls[i].classList.contains('active')) {
+      return toolNames[i];
+    }
+  }
+}
+
+/*
+
+transforms array layout:
+
+tile := [x, y]
+transforms := [element*]
+element := ( shuffle, subst, nsubst )
+shuffle := { 'type': 'SHUFFLE',
+             'groups': [[tile*]*] }
+subst := { 'type': 'SUBST',
+           'repl_each': bool,
+           'from': tile,
+           'to': [{ 'tile': tile, 'weight': int }*] }
+nsubst := { 'type': 'NSUBST',
+            'from': tile,
+            'groups': [
+              { 'repl_each': bool,
+                'count': int,
+                'to': [{ 'tile': tile, 'weight': int }*] }*]
+          }
+*/
+
+{
+
+tilemap = [['.', 'x', 'X', 'c', 'm', 'o', 'n', 'v'],
+           [' ', 'b', 't', '+', '=', 'W', 'w', 'l'],
+           ['@', ')', '(', '&gt;', '&lt;', 'I', '^', '~'],
+           ['T', 'U', 'V', 'Y', 'G', 000, 000, 000],
+           ['%', '*', '|', '$', 000, 000, 000, 000],
+           ['d', 'e', 'f', 'g', 'h', 'i', 'j', 'k'],
+           ['0', '9', '8', 000, 000, 000, 000, 000],
+           ['1', '2', '3', '4', '5', '6', '7', 000],
+           ['-', '&quot;', "'", '`', ';', '_', 'p', 'q'],
+           ['r', 's', 'u', 'y', 000, 000, 000, 000],
+           ['A', 'B', 'C', 'D', 'E', 'F', 'Q', 'H']];
+
+itemdefs = ['any', 'any', 'any', 'any', 'any', 'any', 'any', 'any']; // d-k
+monsdefs = ['random', 'random', 'random', 'random', 'random', 'random', 'random']; // 1-7
+
+descmap = [
+  [
+    "A rock floor.",
+    "A rock wall.",
+    "An indestructable rock wall. In-game, this looks like a regular wall.",
+    "A stone wall. Shatter/LRD can destroy it, digging can't.",
+    "A translucent rock wall.",
+    "An indestructable translucent rock wall. In-game, this looks like a regular wall.",
+    "A translucent stone wall. Shatter/LRD can destroy it, digging can't.",
+    "A metal wall."
+  ], [
+    "An open space outside the vault's area.", 
+    "A crystal wall.",
+    "A tree.",
+    "A closed door.",
+    "A secret door.",
+    "Shallow water.",
+    "Deep water.",
+    "Lava."
+  ], [
+    "An entry point for the vault.",
+    "A staircase leading down. You can't place more than 3 of these.",
+    "A staircase leading up. You can't place more than 3 of these.",
+    "An escape hatch leading down.",
+    "An escape hatch leading up.",
+    "An orcish idol.",
+    "A random trap, adjusted for the vault's depth.",
+    ""
+  ], [
+    "A fountain.",
+    "A sparkling fountain.",
+    "A dry fountain.",
+    "A blood fountain.",
+    "A granite statue.",
+    "",
+    "",
+    ""
+  ], [
+    "A low-quality random item.",
+    "A medium-quality random item.",
+    "A high-quality random item.",
+    "Some gold pieces.",
+    "",
+    "",
+    "",
+    ""
+  ], [
+    "A user-definable item.",
+    "A user-definable item.",
+    "A user-definable item.",
+    "A user-definable item.",
+    "A user-definable item.",
+    "A user-definable item.",
+    "A user-definable item.",
+    "A user-definable item."
+  ], [
+    "A low-difficulty random monster.",
+    "A medium-difficulty random monster.",
+    "A high-difficulty random monster.",
+    "",
+    "",
+    "",
+    "",
+    ""
+  ], [
+    "A user-definable monster.",
+    "A user-definable monster.",
+    "A user-definable monster.",
+    "A user-definable monster.",
+    "A user-definable monster.",
+    "A user-definable monster.",
+    "A user-definable monster.",
+    ""
+  ], [
+    "A programmable tile.",
+    "A programmable tile.",
+    "A programmable tile.",
+    "A programmable tile.",
+    "A programmable tile.",
+    "A programmable tile.",
+    "A programmable tile.",
+    "A programmable tile."
+  ], [
+    "A programmable tile.",
+    "A programmable tile.",
+    "A programmable tile.",
+    "A programmable tile.",
+    "",
+    "",
+    "",
+    ""
+  ], [
+    "A programmable tile.",
+    "A programmable tile.",
+    "A programmable tile.",
+    "A programmable tile.",
+    "A programmable tile.",
+    "A programmable tile.",
+    "A programmable tile.",
+    "A programmable tile."
+  ]
+];
+
+}
+    
+function charToCoords(c) {
+  for (var y = 0; y < 11; y++) {
+    for (var x = 0; x < 8; x++) {
+      if (tilemap[y][x] == c) return({x: x*32, y:y*32});
+    }
+  }
+}
+
+matrix = {
+  width: 0,
+  height: 0,
+  data: [],
+  backups: [],
+};
+  
+matrix.backup = function() {
+  if (matrix.backups.length >= 20) { matrix.backups.shift(); }
+  
+  var data_copy = [];
+  for (var y = 0; y < matrix.height; y++) {
+    var row = [];
+    for (var x = 0; x < matrix.width; x++) {
+      row.push(matrix.data[y][x]);
+    }
+    data_copy.push(row);
+  }
+  
+  matrix.backups.push({width: matrix.width,
+                       height: matrix.height,
+                       data: data_copy});
+}
+
+matrix.restore = function() {
+  var latest = matrix.backups.pop();
+  if (latest) {
+    matrix.width = latest.width;
+    matrix.height = latest.height;
+    matrix.data = latest.data.slice(0);
+  }
+  drawmap.canvas.width = matrix.width * 32;
+  drawmap.canvas.height = matrix.height * 32;
+  matrix.redraw();
+}
+
+matrix.resize = function() {
+  if (matrix.width != 0) { matrix.backup();}
+  nx = document.getElementById('resize-width').value
+  ny = document.getElementById('resize-height').value
+  
+  var newdata = [];
+  for (var y = 0; y < ny; y++) {
+    var row = [];
+    for (var x = 0; x < nx; x++) {
+      if (x < matrix.width && y < matrix.height) {
+        row.push(matrix.data[y][x]);
+      } else
+        row.push([0, 0]);
+    }
+    newdata.push(row);
+  }
+  matrix.data = newdata;
+  matrix.width = nx;
+  matrix.height = ny;
+  drawmap.canvas.width = matrix.width * 32;
+  drawmap.canvas.height = matrix.height * 32;
+  matrix.redraw();
+}
+
+matrix.clear = function(tile) {
+  matrix.backup();
+  if (!tile) tile = [0, 0]
+  matrix.data = []; 
+  for (var y = 0; y < matrix.height; y++) {
+    var row = [];
+    for (var x = 0; x < matrix.width; x++) {
+      row.push(tile);
+    }
+    matrix.data.push(row);
+  }
+  matrix.redraw();
+};
+
+matrix.fill = function() {
+  matrix.clear(selected_tile);
+};
+
+matrix.border = function() {
+  matrix.backup();
+  for (var y = 0; y < matrix.height; y++) {
+    matrix.data[y][0] = selected_tile;
+    matrix.data[y][matrix.width - 1] = selected_tile;
+  }
+  for (var x = 0; x < matrix.width; x++) {
+    matrix.data[0][x] = selected_tile;
+    matrix.data[matrix.height - 1][x] = selected_tile;
+  }
+  matrix.redraw();
+}
+
+matrix.redraw = function() {
+  for (var y = 0; y < matrix.height; y++) {
+    for (var x = 0; x < matrix.width; x++) {
+      var c = matrix.data[y][x];
+      var cx = c[0];
+      var cy = c[1];
+      drawmap.drawImage(tileset, 0, 0, 32, 32, 32*x, 32*y, 32, 32);
+      drawmap.drawImage(tileset, cx, cy, 32, 32, 32*x, 32*y, 32, 32);
+    }
+  }
+  updateDES();
+}
+
+function panelClick(e) {
+  var rc = relMouseCoords(e);
+  var x = (rc.x / 32) | 0;
+  var y = (rc.y / 32) | 0;
+  
+  if (tilemap[y][x] !== 000) {
+    var tileValueNode = document.getElementById('tile-value')
+    tileValueNode.onchange && tileValueNode.onchange();
+    
+    var old_x = selected_tile[0];
+    var old_y = selected_tile[1];
+    selected_tile = [x * 32, y * 32];
+    
+    panel.drawImage(tileset, 0, 0, 32, 32, old_x, old_y, 32, 32);
+    panel.drawImage(tileset, old_x, old_y, 32, 32, old_x, old_y, 32, 32);
+    panel.lineWidth = 2;
+    panel.strokeStyle = '#000';
+    panel.strokeRect(x * 32 + 3, y * 32 + 3, 26, 26);
+    panel.strokeStyle = '#FF0';
+    panel.strokeRect(x * 32 + 2, y * 32 + 2, 28, 28);
+    
+    document.getElementById('tile-desc').innerHTML = descmap[y][x];
+    var graph = document.getElementById('tile-graph').getContext('2d');
+    graph.drawImage(tileset, 0, 0, 32, 32, 0, 0, 64, 64);
+    graph.drawImage(tileset, x * 32, y * 32, 32, 32, 0, 0, 64, 64);
+    
+    isCustomItem = (descmap[y][x] == "A user-definable item.");
+    isCustomMons = (descmap[y][x] == "A user-definable monster.");
+    
+    tileValueNode.disabled = !(isCustomItem || isCustomMons);
+    if (isCustomItem) {
+      tileValueNode.value = itemdefs[x];
+      tileValueNode.onchange = (function (e) {
+        itemdefs[x] = tileValueNode.value;
+      });
+    } else if (isCustomMons) {
+      tileValueNode.value = monsdefs[x];
+      tileValueNode.onchange = (function (e) {
+        monsdefs[x] = tileValueNode.value;
+      });
+    } else {
+      tileValueNode.value = "";
+    }
+  }
+}
+
+function mapPencilMove(e) {
+  var rc = relMouseCoords(e);
+  var x = (rc.x / 32) | 0;
+  var y = (rc.y / 32) | 0;
+  
+  var cx = selected_tile[0];
+  var cy = selected_tile[1];
+  if (click && matrix.data[y][x] != [cx, cy]) {
+    matrix.data[y][x] = [cx, cy];
+    drawmap.drawImage(tileset, 0, 0, 32, 32, 32*x, 32*y, 32, 32);
+    drawmap.drawImage(tileset, cx, cy, 32, 32, 32*x, 32*y, 32, 32);
+    updateDES();
+  }
+}
+
+function mapRectStart(e) {
+  var rc = relMouseCoords(e);
+  var x = (rc.x / 32) | 0;
+  var y = (rc.y / 32) | 0;
+  shape_start = [x, y];
+}
+
+function mapRectEnd(e) {
+  var rc = relMouseCoords(e);
+  var x = (rc.x / 32) | 0;
+  var y = (rc.y / 32) | 0;
+  var shape_end = [x, y];
+  var cx = selected_tile[0];
+  var cy = selected_tile[1];
+  var x1 = Math.min(shape_start[0], shape_end[0]);
+  var x2 = Math.max(shape_start[0], shape_end[0]);
+  var y1 = Math.min(shape_start[1], shape_end[1]);
+  var y2 = Math.max(shape_start[1], shape_end[1]);
+  
+  for (var iy = y1; iy <= y2; iy++) {
+    for (var ix = x1; ix <= x2; ix++) {
+      matrix.data[iy][ix] = [cx, cy];
+      drawmap.drawImage(tileset, 0, 0, 32, 32, 32*ix, 32*iy, 32, 32);
+      drawmap.drawImage(tileset, cx, cy, 32, 32, 32*ix, 32*iy, 32, 32);
+    }
+  }
+  updateDES();
+}
+
+transforms = [];
+
+/* transform list functions */
+
+function addTransform(type) {
+  var t = { 'type': type };
+  if (type == 'SHUFFLE') {
+    t.groups = [];
+  } else if (type == 'SUBST') {
+    t.repl_each = false;
+    t.from = [0, 0];
+    t.to = [];
+  } else if (type == 'NSUBST') {
+    t.from = [0, 0];
+    t.groups = [];
+  }
+  transforms.push(t);
+  updateTransforms();
+}
+
+function removeTransform(index) {
+  transforms.splice(index, 1);
+  updateTransforms();
+}
+
+/* SHUFFLE transform functions */
+
+function addShuffleGroup(t) {
+  t.groups.push([]);
+  updateTransforms();
+}
+
+function removeShuffleGroup(t, index) {
+  t.groups.splice(index, 1);
+  updateTransforms();
+}
+
+function addShuffleElement(a) {
+  a.push(selected_tile.slice(0));
+  updateTransforms();
+}
+
+function removeShuffleElement(a, index) {
+  a.splice(index, 1);
+  updateTransforms();
+}
+
+/* (N)SUBST transform functions */
+
+function setSubstRepl(t, bool) {
+  t.repl_each = bool;
+  updateTransforms();
+}
+
+function setSubstTile(t) {
+  t.from = selected_tile.slice(0);
+  updateTransforms();
+}
+
+function addSubstTile(t) {
+  entry = {};
+  entry.tile = selected_tile.slice(0);
+  entry.weight = 10;
+  t.to.push(entry);
+  updateTransforms();
+}
+
+function updateTransforms() {
+  var transformPane = document.getElementById('opt3');
+  var contents = document.createElement('div');
+  
+  var addButtonFunc =
+    function(i) { return function(e) { addTransform(tTypeNames[i]); }; };
+  var removeButtonFunc =
+    function(i) { return function(e) { removeTransform(i); }; };
+  var addShuffleGroupButtonFunc =
+    function(t) { return function(e) { addShuffleGroup(t); }; };
+  var removeShuffleGroupButtonFunc =
+    function(t, i) { return function(e) { removeShuffleGroup(t, i); }; };
+  var addShuffleElementButtonFunc =
+    function(a) { return function(e) { addShuffleElement(a); }; };
+  var removeShuffleElementButtonFunc =
+    function(a, i) { return function(e) { removeShuffleElement(a, i); }; };
+  var setSubstReplButtonFunc =
+    function(t, b) { return function(e) { setSubstRepl(t, b); }; };
+  var setSubstTileButtonFunc =
+    function(t) { return function(e) { setSubstTile(t); }; };
+  var addSubstTileButtonFunc =
+    function(t) { return function(e) { addSubstTile(t); }; };
+  
+  /* Transform add buttons */
+  var tTypeNames = ['SHUFFLE', 'SUBST', 'NSUBST'];
+  var addButtons = document.createElement('div');
+  addButtons.className = 'btn-group';
+  
+  for (var i = 0; i < tTypeNames.length; i++) {
+    var button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'btn';
+    button.onclick = addButtonFunc(i);
+    button.innerHTML = '<i class="icon-plus"></i> ' + tTypeNames[i];
+    addButtons.appendChild(button);
+  }
+  
+  /* Transform table */
+  var tTable = document.createElement('table');
+  tTable.className = 'table';
+  var header = document.createElement('tr');
+  header.innerHTML = '<th>Type<th>Options';
+  tTable.appendChild(header);
+  
+  for (var i = 0; i < transforms.length; i++) {
+    var t = transforms[i];
+    
+    /* Transform table row */
+    var row = document.createElement('tr');
+    var lCell = document.createElement('td');
+    var rCell = document.createElement('td');
+    
+    var button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'btn';
+    button.onclick = removeButtonFunc(i);
+    button.innerHTML = '<i class="icon-remove"></i>';
+    
+    lCell.appendChild(button);
+    lCell.appendChild(document.createTextNode(' ' + t.type));
+    
+    /* Transform entry */
+    if (t.type == 'SHUFFLE') {
+      var button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'btn';
+      button.onclick = addShuffleGroupButtonFunc(t);
+      button.innerHTML = '<i class="icon-plus"></i> Group';
+      rCell.appendChild(button);
+      
+      var shuffleTable = document.createElement('table');
+      shuffleTable.className = 'table';
+      var header = document.createElement('tr');
+      header.innerHTML = '<th>Group<th>Elements';
+      shuffleTable.appendChild(header);
+      
+      for (var j = 0; j < t.groups.length; j++) {
+        var shuffleRow = document.createElement('tr');
+        var shuffleLCell = document.createElement('td');
+        var shuffleRCell = document.createElement('td');
+        var button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'btn';
+        button.onclick = removeShuffleGroupButtonFunc(t, j);
+        button.innerHTML = '<i class="icon-remove"></i>';
+        shuffleLCell.appendChild(button);
+        buttonName = document.createTextNode(' Group ' + (i + 1) + '.' + (j + 1));
+        shuffleLCell.appendChild(buttonName);
+        
+        for (var k = 0; k < t.groups[j].length; k++) {
+          var bx = -t.groups[j][k][0];
+          var by = -t.groups[j][k][1];
+          var e = document.createElement('div');
+          e.style.float = 'left';
+          e.style.width = '32px';
+          e.style.height = '32px';
+          e.style.background = 'url(\'tiles.png\') 0 0 no-repeat';
+          e.style.backgroundPosition = bx + 'px ' + by + 'px';
+          console.log(e);
+          shuffleRCell.appendChild(e);
+        }
+        
+        var button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'btn';
+        button.onclick = addShuffleElementButtonFunc(t.groups[j]);
+        button.innerHTML = '<i class="icon-plus"></i> Element';
+        shuffleRCell.appendChild(button);
+        
+        shuffleRow.appendChild(shuffleLCell);
+        shuffleRow.appendChild(shuffleRCell);
+        shuffleTable.appendChild(shuffleRow);
+      }
+      
+      rCell.appendChild(shuffleTable);
+    } else if (t.type == 'SUBST') {
+    
+    } else if (t.type == 'NSUBST') {
+    
+    }
+    row.appendChild(lCell);
+    row.appendChild(rCell);
+    tTable.appendChild(row);
+  }
+  
+  contents.appendChild(addButtons);
+  contents.appendChild(tTable);
+  
+  transformPane.removeChild(transformPane.firstChild);
+  transformPane.appendChild(contents);
+}
+
+function updateDES() {
+  // total des string
+  var des = '';
+  
+  // name
+  var vaultName = document.getElementById('vault-name').value
+  vaultName = vaultName || 'nondescript_vault';
+  var vaultAuthor = document.getElementById('vault-author').value
+  vaultAuthor = vaultAuthor || 'anonymous';
+  var desVaultName = (vaultAuthor + '_' + vaultName);
+  desVaultName = desVaultName.toLowerCase().replace(/\s/g, '_');
+  
+  des += 'NAME: ' + desVaultName + '\n';
+  
+  // depth
+  var vaultDepth = document.getElementById('vault-depth').value
+  if (vaultDepth) des +=  'DEPTH: ' + vaultDepth + '\n';
+  
+  // tags
+  var tags = []
+  var tagMatches = [];
+  var tagEls = document.getElementsByClassName('tag');
+  
+  for (var i = 0; i < tagEls.length; i++) {
+    tagMatches.push(!!tagEls[i].classList.contains('active'));
+  }
+  
+  if (tagMatches[1]) { tags.push('allow_dup luniq'); }
+  if (tagMatches[2]) { tags.push('allow_dup'); }
+  if (tagMatches[3]) { tags.push('no_item_gen'); }
+  if (tagMatches[5]) { tags.push('no_monster_gen'); }
+  if (!tagMatches[7]) { tags.push('no_rotate'); }
+  if (!tagMatches[8]) { tags.push('no_hmirror'); }
+  if (!tagMatches[9]) { tags.push('no_vmirror'); }
+  if (!tagMatches[10]) { tags.push('no_vmirror'); }
+  if (tagMatches[21]) { tags.push('ruin'); }
+  
+  if (tags.length) { des += 'TAGS: ' + tags.join(' ') + '\n'; }
+  
+  var orient = '';
+  if (tagMatches[11]) { orient = 'northwest'; }
+  if (tagMatches[12]) { orient = 'north'; }
+  if (tagMatches[13]) { orient = 'northeast'; }
+  if (tagMatches[14]) { orient = 'west'; }
+  if (tagMatches[15]) { orient = 'float'; }
+  if (tagMatches[16]) { orient = 'east'; }
+  if (tagMatches[17]) { orient = 'southwest'; }
+  if (tagMatches[18]) { orient = 'south'; }
+  if (tagMatches[19]) { orient = 'southeast'; }
+  
+  // orient
+  if (orient) { des += 'ORIENT: ' + orient + '\n'; }
+  
+  // arrays
+  function end_remove(arr, item) {
+    var new_arr = arr.slice(0);
+    while (new_arr[new_arr.length - 1] == item)
+      new_arr.pop();
+    return new_arr;
+  }
+  
+  var monsdefs2 = end_remove(monsdefs, 'random');
+  var itemdefs2 = end_remove(itemdefs, 'any');
+  
+  if (monsdefs2.length) des += 'MONS: ' + monsdefs2.join('; ') + '\n';
+  if (itemdefs2.length) des += 'ITEM: ' + itemdefs2.join('; ') + '\n';
+  
+  // map
+  des += 'MAP\n';
+  var stairchars = {'(': ['(', '[', '{'],
+                    ')': [')', ']', '}']};
+  var numstairs = {'(': 0, ')': 0};
+  for (var y = 0; y < matrix.height; y++) {
+    for (var x = 0; x < matrix.width; x++) {
+      var c = matrix.data[y][x];
+      var tx = c[0] / 32;
+      var ty = c[1] / 32;
+      var ch = tilemap[ty][tx];
+      if (ch === '(' || ch === ')') {
+        ch = stairchars[ch][numstairs[ch]++] || '.';
+      }
+      des += ch
+    }
+    des += '\n';
+  }
+  des += 'ENDMAP\n';
+  
+  // refresh
+  document.getElementById('des').innerHTML = des;
+}
+
+drawFs = {
+  'pencil': {
+    'mousedown': mapPencilMove,
+    'mouseup': mapPencilMove,
+    'mousemove': mapPencilMove,
+  },
+  'rect': {
+    'mousedown': mapRectStart,
+    'mouseup': mapRectEnd,
+    'mousemove': function() { return false; },
+  }
+}
+
+function init() {
+  // globals
+  drawmap = document.getElementById('drawmap').getContext('2d');
+  
+  drawmap.canvas.addEventListener('mousedown', function(e) {
+    click = true;
+    matrix.backup();
+    drawFs[selectedTool()]['mousedown'](e);
+  }, false);
+  drawmap.canvas.addEventListener('mouseup', function(e) {
+    click = false;
+    drawFs[selectedTool()]['mouseup'](e);
+  }, false);
+  drawmap.canvas.addEventListener('mousemove', function(e) {
+    drawFs[selectedTool()]['mousemove'](e);
+  }, false);
+  
+  panel = document.getElementById('panel').getContext('2d');
+  for (var y = 0; y < 16; y++) for (var x = 0; x < 8; x++)
+    panel.drawImage(tileset, 0, 0, 32, 32, 32*x, 32*y, 32, 32);
+  panel.drawImage(tileset, 0, 0);
+  panel.canvas.addEventListener('mousedown', panelClick, false);
+  
+  matrix.resize();
+}
+  
+window.onload = function() {
+  tileset = new Image();
+  tileset.onload = init;
+  tileset.src = 'tiles.png';
+  $('[href=#opt4]').click(updateDES);
+  $('[href=#opt3]').click(updateTransforms);
+};
+
+</script>
+</head>
+<body>
+
+<div class="container">
+<h2>vaultedit</h2>
+<div class="well">
+  <div class="tabbable">
+    <ul class="nav nav-tabs">
+      <li class="active"><a href="#opt1" data-toggle="tab">Information</a></li>
+      <li><a href="#opt2" data-toggle="tab">Tags</a></li>
+      <li><a href="#opt3" data-toggle="tab">Transforms</a></li>
+      <li><a href="#opt4" data-toggle="tab">DES output</a></li>
+    </ul>
+    <div class="tab-content">
+      <div class="tab-pane active" id="opt1">
+        <table class="table">
+          <tr>
+            <td>Vault Name:
+            <td><input type="text" id="vault-name" placeholder="Nondescript Vault">
+          <tr>
+            <td>Author:
+            <td><input type="text" id="vault-author" placeholder="Anonymous">
+          <tr>
+            <td>Depth:
+            <td><input type="text" id="vault-depth" placeholder="5-13, !Orc:2-4, Spider">
+          <tr>
+            <td>Width:
+            <td><input id="resize-width" type="number" min="0" max="50" value="10" onchange="matrix.resize()">
+          <tr>
+            <td>Height:
+            <td><input id="resize-height" type="number" min="0" max="50" value="10" onchange="matrix.resize()">
+        </table>
+      </div>
+      <div class="tab-pane" id="opt2">
+        <table class="table">
+          <tr>
+            <td>Occurance:
+            <td>
+              <div class="btn-group" data-toggle="buttons-radio">
+                <button type="button" class="tag btn active">Unique per dungeon</button>
+                <button type="button" class="tag btn">Unique per level</button>
+                <button type="button" class="tag btn">Not unique</button>
+              </div>
+          <tr>
+            <td>Item generation:
+            <td>
+              <div class="btn-group" data-toggle="buttons-radio">
+                <button type="button" class="tag btn"><i class="icon-remove"></i> Disallow</button>
+                <button type="button" class="tag btn active"><i class="icon-ok"></i> Allow</button>
+              </div>
+          <tr>
+            <td>Monster generation:
+            <td>
+              <div class="btn-group" data-toggle="buttons-radio">
+                <button type="button" class="tag btn"><i class="icon-remove"></i> Disallow</button>
+                <button type="button" class="tag btn active"><i class="icon-ok"></i> Allow</button>
+              </div>
+          <tr>
+            <td>Rotation:
+            <td>
+              <div class="btn-group" data-toggle="buttons-checkbox">
+                <button type="button" class="tag btn active"><i class="icon-refresh"></i> Allow rotation</button>
+                <button type="button" class="tag btn active"><i class="icon-resize-horizontal"></i> Allow horizontal mirroring</button>
+                <button type="button" class="tag btn active"><i class="icon-resize-vertical"></i> Allow vertical mirroring</button>
+              </div>
+          <tr>
+            <td>Orientation:
+            <td>
+              <div class="btn-group" data-toggle="buttons-radio">
+                <button type="button" class="tag btn active">Minivault</button><br/><br/>
+                <button type="button" class="tag btn">&#8662;</button>
+                <button type="button" class="tag btn">&#8657;</button>
+                <button type="button" class="tag btn">&#8663;</button><br/>
+                <button type="button" class="tag btn">&#8656;</button>
+                <button type="button" class="tag btn">&nbsp;&nbsp;&nbsp;</button>
+                <button type="button" class="tag btn">&#8658;</button><br/>
+                <button type="button" class="tag btn">&#8665;</button>
+                <button type="button" class="tag btn">&#8659;</button>
+                <button type="button" class="tag btn">&#8664;</button>
+              </div>
+          <tr>
+            <td>Ruined walls:
+            <td>
+              <div class="btn-group" data-toggle="buttons-radio">
+                <button type="button" class="tag btn active"><i class="icon-remove"></i> No</button>
+                <button type="button" class="tag btn"><i class="icon-ok"></i> Yes</button>
+              </div>
+        </table>
+      </div>
+      <div class="tab-pane" id="opt3">
+        nothing
+      </div>
+      <div class="tab-pane" id="opt4">
+        <pre id="des"></pre>
+      </div>
+    </div>
+  </div>
+</div>
+    
+<div class="row">
+  <div class="span4">
+    <div class="well">
+      <div style="text-align:center;">
+        <canvas id="panel" width="256" height="512"></canvas>
+      </div>
+    </div>
+  </div>
+  <div class="span8">
+    <div class="well">
+      <span class="btn-group" data-toggle="buttons-radio">
+        <button type="button" class="tool btn btn-small active"><i class="icon-pencil"></i> Pencil</button>
+        <button type="button" class="tool btn btn-small"><i class="icon-stop"></i> Rectangle</button>
+      </span>
+      
+      <span class="btn-group">
+        <button type="button" class="btn btn-small" onclick="matrix.fill()"><i class="icon-fullscreen"></i> Fill with current</button>
+        <button type="button" class="btn btn-small" onclick="matrix.border()"><i class="icon-edit"></i> Fill border with current</button>
+      </span>
+      
+      <span class="btn-group">
+        <button type="button" class="btn btn-small" onclick="matrix.restore()"><i class="icon-backward"></i> Undo</button>
+      </span>
+    </div>
+
+    <div class="tabbable">
+      <ul class="nav nav-tabs">
+        <li class="active"><a href="#edit1" data-toggle="tab">Map</a></li>
+        <li><a href="#edit2" data-toggle="tab">Tile</a></li>
+      </ul>
+      <div class="tab-content">
+        <div class="tab-pane active" id="edit1">
+          <center>
+            <canvas id="drawmap" width="0" height="0"></canvas>
+          </center>
+        </div>
+        <div class="tab-pane" id="edit2">
+          <table class="table">
+            <tr>
+              <td>Graphic
+              <td><canvas id="tile-graph" width="64" height="64"></canvas>
+            <tr>
+              <td>Description
+              <td id="tile-desc">
+            <tr>
+              <td>Value
+              <td><input type="text" id="tile-value" disabled>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<button onclick="matrix.fill()">Fill</button>
+<button onclick="matrix.border()">Border</button>
+
+</div>
+
+</body>
+</html>
+
+
