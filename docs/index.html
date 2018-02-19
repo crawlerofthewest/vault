@@ -667,23 +667,25 @@ function updateDES() {
   if (tagMatches[2]) { tags.push('allow_dup'); }
   if (tagMatches[4]) { tags.push('no_item_gen'); }
   if (tagMatches[6]) { tags.push('no_monster_gen'); }
-  if (!tagMatches[8]) { tags.push('no_rotate'); }
-  if (!tagMatches[9]) { tags.push('no_hmirror'); }
-  if (!tagMatches[10]) { tags.push('no_vmirror'); }
-  if (tagMatches[22]) { tags.push('ruin'); }
+  if (tagMatches[9]) { tags.push('generate_awake'); }
+  if (tagMatches[10]) { tags.push('generate_awake patrolling'); }
+  if (!tagMatches[11]) { tags.push('no_rotate'); }
+  if (!tagMatches[12]) { tags.push('no_hmirror'); }
+  if (!tagMatches[13]) { tags.push('no_vmirror'); }
+  if (tagMatches[25]) { tags.push('ruin'); }
   
   if (tags.length) { des += 'TAGS: ' + tags.join(' ') + '\n'; }
   
   var orient = '';
-  if (tagMatches[12]) { orient = 'northwest'; }
-  if (tagMatches[13]) { orient = 'north'; }
-  if (tagMatches[14]) { orient = 'northeast'; }
-  if (tagMatches[15]) { orient = 'west'; }
-  if (tagMatches[16]) { orient = 'float'; }
-  if (tagMatches[17]) { orient = 'east'; }
-  if (tagMatches[18]) { orient = 'southwest'; }
-  if (tagMatches[19]) { orient = 'south'; }
-  if (tagMatches[20]) { orient = 'southeast'; }
+  if (tagMatches[15]) { orient = 'northwest'; }
+  if (tagMatches[16]) { orient = 'north'; }
+  if (tagMatches[17]) { orient = 'northeast'; }
+  if (tagMatches[18]) { orient = 'west'; }
+  if (tagMatches[19]) { orient = 'float'; }
+  if (tagMatches[20]) { orient = 'east'; }
+  if (tagMatches[21]) { orient = 'southwest'; }
+  if (tagMatches[22]) { orient = 'south'; }
+  if (tagMatches[23]) { orient = 'southeast'; }
   
   // orient
   if (orient) { des += 'ORIENT: ' + orient + '\n'; }
@@ -852,16 +854,21 @@ window.onload = function() {
             <td>Monster generation:
             <td>
               <div class="btn-group" data-toggle="buttons-radio">
-                <button type="button" class="tag btn"><i class="icon-remove"></i>Disallow</button>
+                <button type="button" class="tag btn"><i class="icon-remove"></i> Disallow</button>
                 <button type="button" class="tag btn active"><i class="icon-ok"></i> Allow</button>
+              </div>
+              <div class="btn-group" data-toggle="buttons-radio">
+                <button type="button" class="tag btn active"><i class="icon-eye-close"></i> Place Monsters Asleep</button>
+                <button type="button" class="tag btn"><i class="icon-eye-open"></i> Place Monsters Awake</button>
+                <button type="button" class="tag btn"><i class="icon-screenshot"></i> Place Monsters Patrolling</button>
               </div>
           <tr>
             <td>Rotation:
             <td>
               <div class="btn-group" data-toggle="buttons-checkbox">
-                <button type="button" class="tag btn active"><i class="icon-refresh"></i> Allow rotation</button>
-                <button type="button" class="tag btn active"><i class="icon-resize-horizontal"></i> Allow horizontal mirroring</button>
-                <button type="button" class="tag btn active"><i class="icon-resize-vertical"></i> Allow vertical mirroring</button>
+                <button type="button" class="tag btn active"><i class="icon-refresh"></i> Allow Rotation</button>
+                <button type="button" class="tag btn active"><i class="icon-resize-horizontal"></i> Allow HMirror</button>
+                <button type="button" class="tag btn active"><i class="icon-resize-vertical"></i> Allow VMirror</button>
               </div>
           <tr>
             <td>Orientation:
