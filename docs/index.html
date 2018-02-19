@@ -636,7 +636,14 @@ function error(v) {
     if (v === 1) { val += "ERR: Connector glyph (@) needs to be on the outer edge!"}
     if (v === 2) { val += "ERR: Shuffle blocks have to be the same size!"}
     console.error(val);
-    return val;
+    return "<font color='red'>" + val + "</font>";
+}
+function warning(v) {
+    var val = '\n';
+    if (v === 0) { val += "WARN: You should change your vault name!"}
+    if (v === 1) { val += "WARN: You should put who authored this vault!"}
+    console.error(val);
+    return "<font color='orange'>" + val + "</font>";
 }
 Array.prototype.remove = function() {
     var what, a = arguments, L = a.length, ax;
@@ -662,6 +669,8 @@ function updateDES() {
   desVaultName = desVaultName.toLowerCase().replace(/\s/g, '_');
   
   des += 'NAME: ' + desVaultName + '\n';
+  var nameWarn = vaultName === 'nondescript_vault';
+  var authorWarn = vaultAuthor === 'anonymous';
   
   // depth
   var vaultDepth = document.getElementById('vault-depth').value
@@ -802,15 +811,12 @@ function updateDES() {
     des += '\n';
   }
   des += 'ENDMAP\n';
-  if (arrv && !valid_arrival) {
-      des += error(0);
-  }
-   if (connector_err) {
-       des += error(1);
-   }
-   if (shuffleErr) {
-       des += error(2);
-   }
+  if (arrv && !valid_arrival) { des += error(0); }
+  if (connector_err) { des += error(1);  }
+  if (shuffleErr) { des += error(2); }
+  if (nameWarn) { des += warning(0); }
+  if (authorWarn) { des += warning(1); }
+  
   
   // refresh
   document.getElementById('des').innerHTML = des;
@@ -870,7 +876,7 @@ window.onload = function() {
 };
 
 function downloadDES() {
-    download(document.getElementById("vault-author").value + "_" + document.getElementById("vault-name").value + ".des", document.getElementById("des").innerHTML);
+    download(document.getElementById("vault-author").value + "_" + document.getElementById("vault-name").value + ".des", document.getElementById("des").textContent);
 }
     
 function download(filename, text) {
