@@ -663,8 +663,8 @@ function updateDES() {
   var valid_arrival = false;
   var arrv = false;
   if (tagMatches[0]) { tags.push('arrival'); arrv = true; } else { arrv = false; }
-  if (tagMatches[1]) { tags.push('allow_dup luniq'); }
-  if (tagMatches[2]) { tags.push('allow_dup'); }
+  if (tagMatches[2]) { tags.push('allow_dup luniq'); }
+  if (tagMatches[3]) { tags.push('allow_dup'); }
   if (tagMatches[4]) { tags.push('no_item_gen'); }
   if (tagMatches[6]) { tags.push('no_trap_gen'); }
   if (tagMatches[8]) { tags.push('no_monster_gen'); }
@@ -817,7 +817,7 @@ window.onload = function() {
       <li><a href="#opt2" data-toggle="tab">Tags</a></li>
       <li><a href="#opt3" data-toggle="tab" >Tags #2</a></li>
       <li><a href="#opt4" data-toggle="tab" >Transforms</a></li>
-      <li><a href="#opt5" data-toggle="tab">DES Output</a></li>
+      <li><a href="#opt5" data-toggle="tab" onclick="updateDES()">DES Output</a></li>
     </ul>
     <div class="tab-content">
       <div class="tab-pane active" id="opt1">
@@ -926,6 +926,9 @@ window.onload = function() {
         nothing
       </div>
       <div class="tab-pane" id="opt5">
+        <span class="btn-group">
+            <button type="button" class="btn btn-small" onclick="updateDES()"><i class="icon-refresh"></i> Refresh DES</button><br><br>
+        </span>
         <pre id="des"></pre>
       </div>
     </div>
@@ -955,10 +958,6 @@ window.onload = function() {
       <span class="btn-group">
         <button type="button" class="btn btn-small" onclick="matrix.restore()"><i class="icon-backward"></i> Undo</button>
         <button type="button" class="btn btn-small" onclick="matrix.clear()"><i class="icon-repeat"></i> Clear</button>
-      </span>
-        
-    <span class="btn-group">
-        <button type="button" class="btn btn-small" onclick="updateDES()"><i class="icon-refresh"></i> Refresh DES</button>
       </span>
     </div>
 
