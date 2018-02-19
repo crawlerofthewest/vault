@@ -343,7 +343,11 @@ function panelClick(e) {
     } else if (isCustomFeat) {
       tileValueNode.value = featdefs[x];
       tileValueNode.onchange = (function (e) {
-        featdefs[x] = tilemap[y][x] + "=" + tileValueNode.value;
+        if (tileValueNode.value[1] === "=") {
+            featdefs[x] = tilemap[y][x] + "=" + tileValueNode.value.substr(2);
+        } else { 
+            featdefs[x] = tilemap[y][x] + "=" + tileValueNode.value;
+        }
       });
     } else {
       tileValueNode.value = "";
