@@ -63,28 +63,6 @@ function selectedTool() {
   }
 }
 
-/*
-
-transforms array layout:
-
-tile := [x, y]
-transforms := [element*]
-element := ( shuffle, subst, nsubst )
-shuffle := { 'type': 'SHUFFLE',
-             'groups': [[tile*]*] }
-subst := { 'type': 'SUBST',
-           'repl_each': bool,
-           'from': tile,
-           'to': [{ 'tile': tile, 'weight': int }*] }
-nsubst := { 'type': 'NSUBST',
-            'from': tile,
-            'groups': [
-              { 'repl_each': bool,
-                'count': int,
-                'to': [{ 'tile': tile, 'weight': int }*] }*]
-          }
-*/
-
 {
 
 tilemap = [['.', 'x', 'X', 'c', 'm', 'o', 'n', 'v'],
@@ -96,10 +74,12 @@ tilemap = [['.', 'x', 'X', 'c', 'm', 'o', 'n', 'v'],
            ['0', '9', '8', 000, 000, 000, 000, 000],
            ['1', '2', '3', '4', '5', '6', '7', 000],
            ['-', '&quot;', "'", '`', ';', '_', 'p', 'q'],
-           ['r', 's', 'u', 'y', 000, 000, 000, 000]];
+           ['r', 's', 'u', 'y', 000, 000, 000, 000],
+           ['J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q']];
 
 itemdefs = ['any', 'any', 'any', 'any', 'any', 'any', 'any', 'any']; // d-k
 monsdefs = ['random', 'random', 'random', 'random', 'random', 'random', 'random']; // 1-7
+featdefs = ['','','','','','',''];    
 
 descmap = [
   [
@@ -193,14 +173,15 @@ descmap = [
     "",
     ""
   ], [
-    "A programmable tile.",
-    "A programmable tile.",
-    "A programmable tile.",
-    "A programmable tile.",
-    "A programmable tile.",
-    "A programmable tile.",
-    "A programmable tile.",
-    "A programmable tile."
+    "A user-definable feature.",
+    "A user-definable feature.",
+    "A user-definable feature.",
+    "A user-definable feature.",
+    "A user-definable feature.",
+    "A user-definable feature.",
+    "A user-definable feature.",
+    "A user-definable feature.",
+    "A user-definable feature.",
   ]
 ];
 
@@ -346,8 +327,9 @@ function panelClick(e) {
     
     isCustomItem = (descmap[y][x] == "A user-definable item.");
     isCustomMons = (descmap[y][x] == "A user-definable monster.");
+    isCustomFeat = (descmap[y][x] == "A user-definable feature.");
     
-    tileValueNode.disabled = !(isCustomItem || isCustomMons);
+    tileValueNode.disabled = !(isCustomItem || isCustomMons || isCustomFeat);
     if (isCustomItem) {
       tileValueNode.value = itemdefs[x];
       tileValueNode.onchange = (function (e) {
@@ -357,6 +339,11 @@ function panelClick(e) {
       tileValueNode.value = monsdefs[x];
       tileValueNode.onchange = (function (e) {
         monsdefs[x] = tileValueNode.value;
+      });
+    } else if (isCustomFeat) {
+      tileValueNode.value = featdefs[x];
+      tileValueNode.onchange = (function (e) {
+        featdefs[x] = tilemap[y][x] + "=" + tileValueNode.value;
       });
     } else {
       tileValueNode.value = "";
@@ -411,7 +398,28 @@ function mapRectEnd(e) {
 transforms = [];
 
 /* transform list functions */
+/*
 
+transforms array layout:
+
+tile := [x, y]
+transforms := [element*]
+element := ( shuffle, subst, nsubst )
+shuffle := { 'type': 'SHUFFLE',
+             'groups': [[tile*]*] }
+subst := { 'type': 'SUBST',
+           'repl_each': bool,
+           'from': tile,
+           'to': [{ 'tile': tile, 'weight': int }*] }
+nsubst := { 'type': 'NSUBST',
+            'from': tile,
+            'groups': [
+              { 'repl_each': bool,
+                'count': int,
+                'to': [{ 'tile': tile, 'weight': int }*] }*]
+          }
+*/
+    
 function addTransform(type) {
   var t = { 'type': type };
   if (type == 'SHUFFLE') {
@@ -611,6 +619,16 @@ function error(v) {
     if (v === 0) { return "ERR 0: Arrival vaults need to have an upstairs!"}
     return "ERR -1: MISCELLANEOUS BUILD ERROR";
 }
+Array.prototype.remove = function() {
+    var what, a = arguments, L = a.length, ax;
+    while (L && this.length) {
+        what = a[--L];
+        while ((ax = this.indexOf(what)) !== -1) {
+            this.splice(ax, 1);
+        }
+    }
+    return this;
+};
     
 function updateDES() {
   // total des string
@@ -674,11 +692,24 @@ function updateDES() {
     return new_arr;
   }
   
+    
+    
   var monsdefs2 = end_remove(monsdefs, 'random');
+  var featdefs2 = featdefs.remove('').remove(undefined);
   var itemdefs2 = end_remove(itemdefs, 'any');
   
   if (monsdefs2.length) des += 'MONS: ' + monsdefs2.join('; ') + '\n';
   if (itemdefs2.length) des += 'ITEM: ' + itemdefs2.join('; ') + '\n';
+  var feattext = "";
+  for(let v of featdefs2) {
+    if (v !== undefined && v !== null) {
+        if (v.length > 0) {
+            feattext += v + ", ";
+        }
+        console.log(feattext);
+    }
+  }
+  if (featdefs2.length) des += 'KFEAT: ' + feattext + '\n';
   
   // map
   des += 'MAP\n';
