@@ -713,8 +713,11 @@ function updateDES() {
         
     }
   }
-  if (featdefs2.length) des += 'KFEAT: ' + feattext.substr(0, feattext.length - 2) + '\n';
-  
+  var featTxt = '';
+  if (featdefs2.length) featTxt += 'KFEAT: ' + feattext.substr(0, feattext.length - 2) + '';
+  if (featTxt.length > 9) {
+      des += featTxt + '\n';
+  }
   // map
   des += 'MAP\n';
   var stairchars = {'&#123;': ['&#123;', '(', '['],
