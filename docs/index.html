@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-<title>vaultedit</title>
+<title>DCSS Vault Editor</title>
 <meta http-equiv="content-type" content="text/html;charset=utf-8" />
 <style type="text/css">
 body { margin-top: 2em; }
@@ -89,7 +89,7 @@ nsubst := { 'type': 'NSUBST',
 
 tilemap = [['.', 'x', 'X', 'c', 'm', 'o', 'n', 'v'],
            [' ', 'b', 't', '+', '=', 'W', 'w', 'l'],
-           ['@', ')', '(', '&gt;', '&lt;', 'I', '~', 'C'],
+           ['@', '&#125;', '&#123;', '&gt;', '&lt;', 'I', '~', 'C'],
            ['T', 'U', 'V', 'Y', 'G', 000, 000, 000],
            ['%', '*', '|', '$', 000, 000, 000, 000],
            ['d', 'e', 'f', 'g', 'h', 'i', 'j', 'k'],
@@ -128,7 +128,7 @@ descmap = [
     "An escape hatch leading up.",
     "An orcish idol.",
     "A random trap, adjusted for the vault's depth.",
-    ""
+    "A random altar."
   ], [
     "A fountain.",
     "A sparkling fountain.",
@@ -607,6 +607,11 @@ function updateTransforms() {
   transformPane.appendChild(contents);
 }
 
+function error(v) {
+    if (v === 0) { return "ERR 0: Arrival vaults need to have an upstairs!"}
+    return "ERR -1: MISCELLANEOUS BUILD ERROR";
+}
+    
 function updateDES() {
   // total des string
   var des = '';
@@ -633,8 +638,9 @@ function updateDES() {
   for (var i = 0; i < tagEls.length; i++) {
     tagMatches.push(!!tagEls[i].classList.contains('active'));
   }
-  
-  if (tagMatches[0]) { tags.push('arrival'); }
+  var valid_arrival = false;
+  var arrv = false;
+  if (tagMatches[0]) { tags.push('arrival'); arrv = true; } else { arrv = false; }
   if (tagMatches[1]) { tags.push('allow_dup luniq'); }
   if (tagMatches[2]) { tags.push('allow_dup'); }
   if (tagMatches[4]) { tags.push('no_item_gen'); }
@@ -677,16 +683,19 @@ function updateDES() {
   
   // map
   des += 'MAP\n';
-  var stairchars = {'(': ['(', '[', '{'],
-                    ')': [')', ']', '}']};
-  var numstairs = {'(': 0, ')': 0};
+  var stairchars = {'&#123;': ['&#123;', '(', '['],
+                    '&#125;': ['&#125;', ')', ']']};
+  var numstairs = {'&#123;': 0, '&#125;': 0};
   for (var y = 0; y < matrix.height; y++) {
     for (var x = 0; x < matrix.width; x++) {
       var c = matrix.data[y][x];
       var tx = c[0] / 32;
       var ty = c[1] / 32;
       var ch = tilemap[ty][tx];
-      if (ch === '(' || ch === ')') {
+      if (ch === '&#123;' || ch === '&#125;') {
+          if (ch === '&#125;' && arrv) {
+              valid_arrival = true;
+          }
         ch = stairchars[ch][numstairs[ch]++] || '.';
       }
       des += ch
@@ -694,6 +703,9 @@ function updateDES() {
     des += '\n';
   }
   des += 'ENDMAP\n';
+  if (arrv && !valid_arrival) {
+      des += error(0);
+  }
   
   // refresh
   document.getElementById('des').innerHTML = des;
