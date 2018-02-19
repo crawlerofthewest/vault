@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-<title>DCSS Vault Editor b6</title>
+<title>DCSS Vault Editor b7</title>
 <meta http-equiv="content-type" content="text/html;charset=utf-8" />
 <style type="text/css">
 body { margin-top: 2em; }
@@ -869,6 +869,22 @@ window.onload = function() {
 }); 
 };
 
+function downloadDES() {
+    download(document.getElementById("vault-author").value + "_" + document.getElementById("vault-name").value + ".des", document.getElementById("des").innerHTML);
+}
+    
+function download(filename, text) {
+  var element = document.createElement('a');
+  element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+  element.setAttribute('download', filename);
+
+  element.style.display = 'none';
+  document.body.appendChild(element);
+
+  element.click();
+
+  document.body.removeChild(element);
+}
 </script>
 </head>
 <body>
@@ -1083,8 +1099,9 @@ window.onload = function() {
       </div>
       <div class="tab-pane" id="opt5">
         <span class="btn-group">
-            <button type="button" class="btn btn-small" onclick="updateDES()"><i class="icon-refresh"></i> Refresh DES</button><br><br>
-        </span>
+            <button type="button" class="btn btn-small" onclick="updateDES()"><i class="icon-refresh"></i> Refresh DES</button>
+            <button type="button" class="btn btn-small" onclick="downloadDES()"><i class="icon-download"></i> Download DES File</button>
+        </span><br><br>
         <pre id="des"></pre>
       </div>
     </div>
