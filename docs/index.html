@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-<title>DCSS Vault Editor b5</title>
+<title>DCSS Vault Editor b6</title>
 <meta http-equiv="content-type" content="text/html;charset=utf-8" />
 <style type="text/css">
 body { margin-top: 2em; }
@@ -520,7 +520,7 @@ function updateTransforms() {
     function(t) { return function(e) { addSubstTile(t); }; };
   
   /* Transform add buttons */
-  var tTypeNames = ['SHUFFLE', 'SUBST', 'NSUBST'];
+  var tTypeNames = ['SHUFFLE'];//, 'SUBST', 'NSUBST'];
   var addButtons = document.createElement('div');
   addButtons.className = 'btn-group';
   
@@ -592,10 +592,12 @@ function updateTransforms() {
           e.style.float = 'left';
           e.style.width = '32px';
           e.style.height = '32px';
+          e.className = 'shuffle_cell_' + i + '_' + j;
+          e.setAttribute("id", "shufCell_" + i + "_" + j + "_" + k + "_" + (bx / -32) + "_" + (by / -32));
           e.style.background = 'url(\'tiles.png\') 0 0 no-repeat';
           e.style.backgroundPosition = bx + 'px ' + by + 'px';
-          console.log(e);
           shuffleRCell.appendChild(e);
+          updateDES();
         }
         
         var button = document.createElement('button');
@@ -632,6 +634,8 @@ function error(v) {
     var val = '\n';
     if (v === 0) { val += "ERR: Arrival vaults need to have an upstairs!"}
     if (v === 1) { val += "ERR: Connector glyph (@) needs to be on the outer edge!"}
+    if (v === 2) { val += "ERR: Shuffle blocks have to be the same size!"}
+    console.error(val);
     return val;
 }
 Array.prototype.remove = function() {
@@ -715,8 +719,42 @@ function updateDES() {
     return new_arr;
   }
   
-    
-    
+  //transforms!
+  var shuffleParam = "";
+  var shuffleErr = false;
+  var shuffleBlockSize = 0;
+  var s_ctr = 0;
+  for (let trans of transforms) {
+    s_ctr = 0;
+    if (trans.type === "SHUFFLE") {
+        if (shuffleParam.length === 0) {
+            shuffleParam += "SHUFFLE: ";
+        } else {
+            shuffleParam += ", ";
+        }
+        s_ctr = 0;
+        shuffleBlockSize = 0;
+    }
+    for (let indiv of trans.groups) {
+        //shuffle transforms
+        if (trans.type === "SHUFFLE") {
+            for (let g of indiv) {
+                shuffleBlockSize = indiv[0].length;
+                if (indiv.length !== shuffleBlockSize && trans.groups.length > 1) {
+                    shuffleErr = true;
+                }
+                shuffleParam += tilemap[(g[1] / 32)][(g[0] / 32)]; 
+            }
+            if (trans.groups.length > 1) {
+                if (s_ctr < trans.groups.length - 1) {
+                    shuffleParam += "/";
+                }
+            }
+            s_ctr++;
+        }
+    }   
+  }
+  des += shuffleParam + "\n";
   var monsdefs2 = end_remove(monsdefs, 'random');
   var featdefs2 = featdefs.remove('').remove(undefined);
   var itemdefs2 = end_remove(itemdefs, 'any');
@@ -770,6 +808,9 @@ function updateDES() {
    if (connector_err) {
        des += error(1);
    }
+   if (shuffleErr) {
+       des += error(2);
+   }
   
   // refresh
   document.getElementById('des').innerHTML = des;
@@ -821,7 +862,8 @@ window.onload = function() {
   tileset.onload = init;
   tileset.src = 'tiles.png';
   $('[href=#opt4]').click(updateDES);
-  $('[href=#opt3]').click(updateTransforms);
+  $('[href=#opt5]').click(updateDES);
+  $('[href=#opt4]').click(updateTransforms);
   $('canvas').bind('contextmenu', function(e){
     return false;
 }); 

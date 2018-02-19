@@ -14,3 +14,31 @@ xxWWTWWxx
 xxxWWWxxx
 ENDMAP
 
+NAME: rangerofthewest_fedhas_small_lake
+DEPTH: D4-7
+TAGS: no_trap_gen generate_awake
+KFEAT: J=altar_fedhas
+MAP
+...t..tt..
+..ttWWWtt.
+.ttttWWttt
+0tttttWWt.
+.WWtttWW.0
+.WWWtWWW..
+ttWWWWW.J.
+.ttWWWtt.t
+..ttWWWt..
+..ttt..tt.
+ENDMAP
+
+NAME: rangerofthewest_intersection
+DEPTH: 2-15
+TAGS: no_trap_gen no_monster_gen generate_awake
+MAP
+cc@@cc
+cT..Tc
+@....@
+@....@
+cT..Tc
+cc@@cc
+ENDMAP
