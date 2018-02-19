@@ -703,13 +703,13 @@ function updateDES() {
   var feattext = "";
   for(let v of featdefs2) {
     if (v !== undefined && v !== null) {
-        if (v.length > 0) {
+        if (v.length > 3 && v.substr(2) !== "undefined") {
             feattext += v + ", ";
         }
-        console.log(feattext);
+        
     }
   }
-  if (featdefs2.length) des += 'KFEAT: ' + feattext + '\n';
+  if (featdefs2.length) des += 'KFEAT: ' + feattext.substr(0, feattext.length - 2) + '\n';
   
   // map
   des += 'MAP\n';
