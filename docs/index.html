@@ -727,7 +727,7 @@ function updateDES() {
       var ty = c[1] / 32;
       var ch = tilemap[ty][tx];
       if (ch === '&#123;' || ch === '&#125;') {
-          if (ch === '&#125;' && arrv) {
+          if (ch === '&#123;' && arrv) {
               valid_arrival = true;
           }
         ch = stairchars[ch][numstairs[ch]++] || '.';
