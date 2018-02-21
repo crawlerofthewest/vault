@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-<title>DCSS Vault Editor b7</title>
+<title>DCSS Vault Editor b8</title>
 <meta http-equiv="content-type" content="text/html;charset=utf-8" />
 <style type="text/css">
 body { margin-top: 2em; }
@@ -156,19 +156,19 @@ descmap = [
     "A user-definable monster.",
     ""
   ], [
-    "A programmable tile.",
-    "A programmable tile.",
-    "A programmable tile.",
-    "A programmable tile.",
-    "A programmable tile.",
-    "A programmable tile.",
-    "A programmable tile.",
-    "A programmable tile."
+    "A A placeholder glyph for complex map making.",
+    "A A placeholder glyph for complex map making.",
+    "A A placeholder glyph for complex map making.",
+    "A A placeholder glyph for complex map making.",
+    "A A placeholder glyph for complex map making.",
+    "A A placeholder glyph for complex map making.",
+    "A A placeholder glyph for complex map making.",
+    "A A placeholder glyph for complex map making."
   ], [
-    "A programmable tile.",
-    "A programmable tile.",
-    "A programmable tile.",
-    "A programmable tile.",
+    "A A placeholder glyph for complex map making.",
+    "A A placeholder glyph for complex map making.",
+    "A A placeholder glyph for complex map making.",
+    "A A placeholder glyph for complex map making.",
     "",
     "",
     "",
@@ -444,6 +444,8 @@ function addTransform(type) {
   } else if (type == 'NSUBST') {
     t.from = [0, 0];
     t.groups = [];
+  } else if (type == 'KPROP') {
+    t.groups = [];
   }
   transforms.push(t);
   updateTransforms();
@@ -458,6 +460,12 @@ function removeTransform(index) {
 
 function addShuffleGroup(t) {
   t.groups.push([]);
+  updateTransforms();
+}
+    
+function addKPropGroup(t) {
+  t.groups.push([{glyph:[selected_tile.slice(0)[0], selected_tile.slice(0)[1]], glyphchar:tilemap[selected_tile.slice(0)[1] / 32][selected_tile.slice(0)[0] / 32], bloody:false, noCloudGen:false, noTele:false, noSubmerge:false, noTide:false, noJiyva:false}]);
+  
   updateTransforms();
 }
 
@@ -496,6 +504,42 @@ function addSubstTile(t) {
   updateTransforms();
 }
 
+function kpropBloody(t) {
+    var i = parseInt(t.split("_")[0]);
+    var j = parseInt(t.split("_")[1]);
+    transforms[i].groups[j][0].bloody = !transforms[i].groups[j][0].bloody;
+}
+
+function kpropCloudy(t) {
+    var i = parseInt(t.split("_")[0]);
+    var j = parseInt(t.split("_")[1]);
+    transforms[i].groups[j][0].noCloudGen = !transforms[i].groups[j][0].noCloudGen;
+}
+    
+function kpropTeleBan(t) {
+    var i = parseInt(t.split("_")[0]);
+    var j = parseInt(t.split("_")[1]);
+    transforms[i].groups[j][0].noTele = !transforms[i].groups[j][0].noTele;
+}
+    
+function kpropSubmerge(t) {
+    var i = parseInt(t.split("_")[0]);
+    var j = parseInt(t.split("_")[1]);
+    transforms[i].groups[j][0].noSubmerge = !transforms[i].groups[j][0].noSubmerge;
+}
+    
+function kpropTides(t) {
+    var i = parseInt(t.split("_")[0]);
+    var j = parseInt(t.split("_")[1]);
+    transforms[i].groups[j][0].noTide = !transforms[i].groups[j][0].noTide;
+}
+    
+function kpropJiyva(t) {
+    var i = parseInt(t.split("_")[0]);
+    var j = parseInt(t.split("_")[1]);
+    transforms[i].groups[j][0].noJiyva = !transforms[i].groups[j][0].noJiyva;
+}
+    
 function updateTransforms() {
   var transformPane = document.getElementById('opt4');
   var contents = document.createElement('div');
@@ -506,6 +550,8 @@ function updateTransforms() {
     function(i) { return function(e) { removeTransform(i); }; };
   var addShuffleGroupButtonFunc =
     function(t) { return function(e) { addShuffleGroup(t); }; };
+  var addKPropGroupButtonFunc =
+    function(t) { return function(e) { addKPropGroup(t); }; };
   var removeShuffleGroupButtonFunc =
     function(t, i) { return function(e) { removeShuffleGroup(t, i); }; };
   var addShuffleElementButtonFunc =
@@ -520,7 +566,7 @@ function updateTransforms() {
     function(t) { return function(e) { addSubstTile(t); }; };
   
   /* Transform add buttons */
-  var tTypeNames = ['SHUFFLE'];//, 'SUBST', 'NSUBST'];
+  var tTypeNames = ['SHUFFLE', 'KPROP'];//, 'SUBST', 'NSUBST'];
   var addButtons = document.createElement('div');
   addButtons.className = 'btn-group';
   
@@ -617,6 +663,90 @@ function updateTransforms() {
     
     } else if (t.type == 'NSUBST') {
     
+    } else if (t.type == 'KPROP') {
+        var button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'btn';
+      button.onclick = addKPropGroupButtonFunc(t);
+      button.innerHTML = '<i class="icon-plus"></i> Glyph Property';
+      rCell.appendChild(button);
+      
+      var shuffleTable = document.createElement('table');
+      shuffleTable.className = 'table';
+      var header = document.createElement('tr');
+      header.innerHTML = '<th>Glyph<th>Properties';
+      shuffleTable.appendChild(header);
+      
+      for (var j = 0; j < t.groups.length; j++) {
+        var shuffleRow = document.createElement('tr');
+        var shuffleLCell = document.createElement('td');
+        var shuffleRCell = document.createElement('td');
+        var button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'btn';
+        button.onclick = removeShuffleGroupButtonFunc(t, j);
+        button.innerHTML = '<i class="icon-remove"></i>';
+        shuffleLCell.appendChild(button);
+        buttonName = document.createTextNode(' Glyph (' + tilemap[t.groups[j][0].glyph[1] / 32][t.groups[j][0].glyph[0] / 32]+')');
+        shuffleLCell.appendChild(buttonName);
+        
+        for (var k = 0; k < t.groups[j].length; k++) {
+          var bx = -t.groups[j][k][0];
+          var by = -t.groups[j][k][1];
+          var e = document.createElement('div');
+          var bloodyActive = t.groups[j][0].bloody;
+          var cloudGenActive = !t.groups[j][0].noCloudGen;
+          var teleBan = t.groups[j][0].noTele;
+          var submerge = !t.groups[j][0].noSubmerge;
+          var tide = !t.groups[j][0].noTide;
+          var jiyva = !t.groups[j][0].noJiyva;
+          if (bloodyActive) {
+              bloodyActive = " active";
+          } else {
+              bloodyActive = "";
+          }
+          if (cloudGenActive) {
+              cloudGenActive = " active";
+          } else {
+              cloudGenActive = "";
+          }
+          if (teleBan) {
+              teleBan = " active";
+          } else {
+              teleBan = "";
+          }
+          if (submerge) {
+              submerge = " active";
+          } else {
+              submerge = "";
+          }
+          if (tide) {
+              tide = " active";
+          } else {
+              tide = "";
+          }
+          if (jiyva) {
+              jiyva = " active";
+          } else {
+              jiyva = "";
+          }
+          $(e).html('<div class="btn-group" data-toggle="buttons-checkbox">' + 
+                    '<button type="button" class="tag btn' + bloodyActive + '" onClick="kpropBloody(\''+i+'_'+j+'\')">Bloody</button>' +
+                    '<button type="button" class="tag btn' + cloudGenActive + '" onClick="kpropCloudy(\''+i+'_'+j+'\')">Cloud Gen</button>' +
+                    '<button type="button" class="tag btn' + teleBan + '" onClick="kpropTeleBan(\''+i+'_'+j+'\')">TeleBan</button>' +
+                    '<button type="button" class="tag btn' + submerge + '" onClick="kpropSubmerge(\''+i+'_'+j+'\')">Mons. Submerge</button>' +
+                    '<button type="button" class="tag btn' + tide + '" onClick="kpropTides(\''+i+'_'+j+'\')">Shoal Tides</button>' +
+                    '<button type="button" class="tag btn' + jiyva + '" onClick="kpropJiyva(\''+i+'_'+j+'\')">Jiyva</button>' +
+                    '</div>');
+          shuffleRCell.appendChild(e);
+          updateDES();
+        }
+        shuffleRow.appendChild(shuffleLCell);
+        shuffleRow.appendChild(shuffleRCell);
+        shuffleTable.appendChild(shuffleRow);
+      }
+      
+      rCell.appendChild(shuffleTable);
     }
     row.appendChild(lCell);
     row.appendChild(rCell);
@@ -635,14 +765,12 @@ function error(v) {
     if (v === 0) { val += "ERR: Arrival vaults need to have an upstairs!"}
     if (v === 1) { val += "ERR: Connector glyph (@) needs to be on the outer edge!"}
     if (v === 2) { val += "ERR: Shuffle blocks have to be the same size!"}
-    console.error(val);
     return "<font color='red'>" + val + "</font>";
 }
 function warning(v) {
     var val = '\n';
     if (v === 0) { val += "WARN: You should change your vault name!"}
     if (v === 1) { val += "WARN: You should put who authored this vault!"}
-    console.error(val);
     return "<font color='orange'>" + val + "</font>";
 }
 Array.prototype.remove = function() {
@@ -729,41 +857,79 @@ function updateDES() {
   }
   
   //transforms!
-  var shuffleParam = "";
+  var s_ctr = 0;
+  var k_ctr =0;
   var shuffleErr = false;
   var shuffleBlockSize = 0;
-  var s_ctr = 0;
+  var currTrans = 0;
   for (let trans of transforms) {
+    var param_text = "";
     s_ctr = 0;
+    k_ctr = 0;
     if (trans.type === "SHUFFLE") {
-        if (shuffleParam.length === 0) {
-            shuffleParam += "SHUFFLE: ";
-        } else {
-            shuffleParam += ", ";
-        }
+        param_text += "\nSHUFFLE: "
         s_ctr = 0;
         shuffleBlockSize = 0;
     }
-    for (let indiv of trans.groups) {
+    for (let ind of trans.groups) {
         //shuffle transforms
         if (trans.type === "SHUFFLE") {
-            for (let g of indiv) {
-                shuffleBlockSize = indiv[0].length;
-                if (indiv.length !== shuffleBlockSize && trans.groups.length > 1) {
+            for (let g of ind) {
+                shuffleBlockSize = ind[0].length;
+                if (ind.length !== shuffleBlockSize && trans.groups.length > 1) {
                     shuffleErr = true;
                 }
-                shuffleParam += tilemap[(g[1] / 32)][(g[0] / 32)]; 
+                param_text += tilemap[(g[1] / 32)][(g[0] / 32)]; 
             }
             if (trans.groups.length > 1) {
                 if (s_ctr < trans.groups.length - 1) {
-                    shuffleParam += "/";
+                    param_text += "/";
                 }
             }
             s_ctr++;
         }
-    }   
+        if (trans.type === "KPROP") {
+            for (let indiv of ind) {
+                var param_val = true;
+                var props = "";
+                if (indiv.bloody) {
+                    props += "bloody ";
+                }
+                if (indiv.noCloudGen) {
+                    props += "no_cloud_gen ";
+                }
+                if (indiv.noTele) {
+                    props += "no_tele_into ";
+                }
+                if (indiv.noSubmerge) {
+                    props += "no_submerge ";
+                }
+                if (indiv.noTide) {
+                    props += "no_tide ";
+                }
+                if (indiv.noJiyva) {
+                    props += "no_jiyva ";
+                }
+                console.log(props);
+                if (props.length < 1) {
+                    param_val = false;
+                } else {
+                    props = props.substr(0, props.length);
+                }
+                if (param_val) { 
+                    if (k_ctr <= trans.groups.length - 1) {
+                        param_text += "\nKPROP: ";
+                        param_text += indiv.glyphchar + " = " + props;
+                    }
+                }
+                k_ctr++;
+            }
+        }
+    } 
+    currTrans++;  
+    if (true) { des += param_text; }  
   }
-  des += shuffleParam + "\n";
+  des += "\n";
   var monsdefs2 = end_remove(monsdefs, 'random');
   var featdefs2 = featdefs.remove('').remove(undefined);
   var itemdefs2 = end_remove(itemdefs, 'any');

@@ -15,7 +15,7 @@ xxxWWWxxx
 ENDMAP
 
 NAME: rangerofthewest_fedhas_small_lake
-DEPTH: D4-7
+DEPTH: D:4-7
 TAGS: no_trap_gen generate_awake
 KFEAT: J=altar_fedhas
 MAP
@@ -31,14 +31,71 @@ ttWWWWW.J.
 ..ttt..tt.
 ENDMAP
 
-NAME: rangerofthewest_intersection
-DEPTH: 2-15
-TAGS: no_trap_gen no_monster_gen generate_awake
+NAME: rangerofthewest_magical_sanctuary
+DEPTH: D:5-13
 MAP
-cc@@cc
-cT..Tc
-@....@
-@....@
-cT..Tc
-cc@@cc
+..........
+....ttt.9.
+..tttx.tt.
+.ttxxWWWxt
+.xxWWWUWWx
+.xWW.*.WWx
+......WWxt
+....WWWxtt
+..$.xxxtt.
+....tttt..
+ENDMAP
+
+NAME: rangerofthewest_small_cash_vault
+DEPTH: D:7-11
+TAGS: generate_awake
+MAP
+xxxx..xxxx
+x%$x..x$%x
+x0x....x0x
+xx.9vv9.xx
+...v$$v...
+..9v$$v9..
+...v$$v...
+xx.9vv9.xx
+x0x....x0x
+x*0x..x0*x
+xxxx..xxxx
+ENDMAP
+
+NAME: rangerofthewest_big_cash_vault
+DEPTH: D:7-11
+TAGS: generate_awake
+ORIENT: float
+MAP
+xxxxxxxxxx
+xWWWWWWWWx
+xW8$||$8Wx
+x***UU***x
+x***88***x
+x$8$99$8$x
+x$$$88$$$x
+xxxx==xxxx
+   x..x   
+   x..x   
+   x@@x   
+ENDMAP
+
+NAME: rangerofthewest_small_deadly_loot_vault
+DEPTH: D:7-11
+TAGS: generate_awake
+ORIENT: float
+
+ITEM: any; any; any; 
+MAP
+ vvv++vvv 
+vv9+00+9vv
+v99v..v99v
+v+vv++vv+v
++0.+$*+.0+
++0.+|$+.0+
+v+vv++vv+v
+v99v..v99v
+vv9+00+9vv
+ vvv++vvv 
 ENDMAP
