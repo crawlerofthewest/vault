@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-<title>DCSS Vault Editor b8</title>
+<title>DCSS Vault Editor b9</title>
 <meta http-equiv="content-type" content="text/html;charset=utf-8" />
 <style type="text/css">
 body { margin-top: 2em; }
@@ -446,6 +446,8 @@ function addTransform(type) {
     t.groups = [];
   } else if (type == 'KPROP') {
     t.groups = [];
+  } else if (type == 'KMASK') {
+    t.groups = [];
   }
   transforms.push(t);
   updateTransforms();
@@ -465,6 +467,12 @@ function addShuffleGroup(t) {
     
 function addKPropGroup(t) {
   t.groups.push([{glyph:[selected_tile.slice(0)[0], selected_tile.slice(0)[1]], glyphchar:tilemap[selected_tile.slice(0)[1] / 32][selected_tile.slice(0)[0] / 32], bloody:false, noCloudGen:false, noTele:false, noSubmerge:false, noTide:false, noJiyva:false}]);
+  
+  updateTransforms();
+}
+    
+function addKMaskGroup(t) {
+  t.groups.push([{glyph:[selected_tile.slice(0)[0], selected_tile.slice(0)[1]], glyphchar:tilemap[selected_tile.slice(0)[1] / 32][selected_tile.slice(0)[0] / 32], noItems:false, noMons:false, noTraps:false, fixPools:true, fixWalls:true}]);
   
   updateTransforms();
 }
@@ -504,6 +512,36 @@ function addSubstTile(t) {
   updateTransforms();
 }
 
+function kmaskItems(t) {
+    var i = parseInt(t.split("_")[0]);
+    var j = parseInt(t.split("_")[1]);
+    transforms[i].groups[j][0].noItems = !transforms[i].groups[j][0].noItems;
+}
+    
+function kmaskMons(t) {
+    var i = parseInt(t.split("_")[0]);
+    var j = parseInt(t.split("_")[1]);
+    transforms[i].groups[j][0].noMons = !transforms[i].groups[j][0].noMons;
+}
+
+function kmaskTraps(t) {
+    var i = parseInt(t.split("_")[0]);
+    var j = parseInt(t.split("_")[1]);
+    transforms[i].groups[j][0].noTraps = !transforms[i].groups[j][0].noTraps;
+}
+    
+function kmaskWalls(t) {
+    var i = parseInt(t.split("_")[0]);
+    var j = parseInt(t.split("_")[1]);
+    transforms[i].groups[j][0].fixWalls = !transforms[i].groups[j][0].fixWalls;
+}
+    
+function kmaskPools(t) {
+    var i = parseInt(t.split("_")[0]);
+    var j = parseInt(t.split("_")[1]);
+    transforms[i].groups[j][0].fixPools = !transforms[i].groups[j][0].fixPools;
+}
+    
 function kpropBloody(t) {
     var i = parseInt(t.split("_")[0]);
     var j = parseInt(t.split("_")[1]);
@@ -552,6 +590,8 @@ function updateTransforms() {
     function(t) { return function(e) { addShuffleGroup(t); }; };
   var addKPropGroupButtonFunc =
     function(t) { return function(e) { addKPropGroup(t); }; };
+  var addKMaskGroupButtonFunc =
+    function(t) { return function(e) { addKMaskGroup(t); }; };
   var removeShuffleGroupButtonFunc =
     function(t, i) { return function(e) { removeShuffleGroup(t, i); }; };
   var addShuffleElementButtonFunc =
@@ -566,7 +606,7 @@ function updateTransforms() {
     function(t) { return function(e) { addSubstTile(t); }; };
   
   /* Transform add buttons */
-  var tTypeNames = ['SHUFFLE', 'KPROP'];//, 'SUBST', 'NSUBST'];
+  var tTypeNames = ['SHUFFLE', 'KPROP', 'KMASK'];//, 'SUBST', 'NSUBST'];
   var addButtons = document.createElement('div');
   addButtons.className = 'btn-group';
   
@@ -747,6 +787,63 @@ function updateTransforms() {
       }
       
       rCell.appendChild(shuffleTable);
+    } else if (t.type == 'KMASK') {
+        var button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'btn';
+      button.onclick = addKMaskGroupButtonFunc(t);
+      button.innerHTML = '<i class="icon-plus"></i> Glyph Mask';
+      rCell.appendChild(button);
+      
+      var shuffleTable = document.createElement('table');
+      shuffleTable.className = 'table';
+      var header = document.createElement('tr');
+      header.innerHTML = '<th>Glyph<th>Masks';
+      shuffleTable.appendChild(header);
+      
+      for (var j = 0; j < t.groups.length; j++) {
+        var shuffleRow = document.createElement('tr');
+        var shuffleLCell = document.createElement('td');
+        var shuffleRCell = document.createElement('td');
+        var button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'btn';
+        button.onclick = removeShuffleGroupButtonFunc(t, j);
+        button.innerHTML = '<i class="icon-remove"></i>';
+        shuffleLCell.appendChild(button);
+        buttonName = document.createTextNode(' Glyph (' + tilemap[t.groups[j][0].glyph[1] / 32][t.groups[j][0].glyph[0] / 32]+')');
+        shuffleLCell.appendChild(buttonName);
+        
+        for (var k = 0; k < t.groups[j].length; k++) {
+          var bx = -t.groups[j][k][0];
+          var by = -t.groups[j][k][1];
+          var e = document.createElement('div');
+          var genItems = !t.groups[j][0].noItems;
+          var genMons = !t.groups[j][0].noMons;
+          var genTraps = !t.groups[j][0].noTraps;
+          var fixWalls = t.groups[j][0].fixWalls;
+          var fixPools = t.groups[j][0].fixPools;
+          if (genItems) { genItems = " active"; } else { genItems = ""; }
+          if (genMons) { genMons = " active"; } else { genMons = ""; }
+          if (genTraps) { genTraps = " active"; } else { genTraps = ""; }
+          if (fixWalls) { fixWalls = " active"; } else { fixWalls = ""; }
+          if (fixPools) { fixPools = " active"; } else { fixPools = ""; }
+          $(e).html('<div class="btn-group" data-toggle="buttons-checkbox">' + 
+                    '<button type="button" class="tag btn' + genItems + '" onClick="kmaskItems(\''+i+'_'+j+'\')">Gen. Items</button>' +
+                    '<button type="button" class="tag btn' + genMons + '" onClick="kmaskMons(\''+i+'_'+j+'\')">Gen. Mons</button>' +
+                    '<button type="button" class="tag btn' + genTraps + '" onClick="kmaskTraps(\''+i+'_'+j+'\')">Gen. Traps</button>' +
+                    '<button type="button" class="tag btn' + fixWalls + '" onClick="kmaskWalls(\''+i+'_'+j+'\')">Fix Walls</button>' +
+                    '<button type="button" class="tag btn' + fixPools + '" onClick="kmaskPools(\''+i+'_'+j+'\')">Fix Pools</button>' +
+                    '</div>');
+          shuffleRCell.appendChild(e);
+          updateDES();
+        }
+        shuffleRow.appendChild(shuffleLCell);
+        shuffleRow.appendChild(shuffleRCell);
+        shuffleTable.appendChild(shuffleRow);
+      }
+      
+      rCell.appendChild(shuffleTable);
     }
     row.appendChild(lCell);
     row.appendChild(rCell);
@@ -910,7 +1007,6 @@ function updateDES() {
                 if (indiv.noJiyva) {
                     props += "no_jiyva ";
                 }
-                console.log(props);
                 if (props.length < 1) {
                     param_val = false;
                 } else {
@@ -919,6 +1015,39 @@ function updateDES() {
                 if (param_val) { 
                     if (k_ctr <= trans.groups.length - 1) {
                         param_text += "\nKPROP: ";
+                        param_text += indiv.glyphchar + " = " + props;
+                    }
+                }
+                k_ctr++;
+            }
+        }
+        if (trans.type === "KMASK") {
+            for (let indiv of ind) {
+                var param_val = true;
+                var props = "";
+                if (indiv.noItems) {
+                    props += "no_item_gen ";
+                }
+                if (indiv.noMons) {
+                    props += "no_mons_gen ";
+                }
+                if (indiv.noTraps) {
+                    props += "no_trap_gen ";
+                }
+                if (!indiv.fixWalls) {
+                    props += "no_wall_fixup ";
+                }
+                if (!indiv.fixPools) {
+                    props += "no_pool_fixup ";
+                }
+                if (props.length < 1) {
+                    param_val = false;
+                } else {
+                    props = props.substr(0, props.length);
+                }
+                if (param_val) { 
+                    if (k_ctr <= trans.groups.length - 1) {
+                        param_text += "\nKMASK: ";
                         param_text += indiv.glyphchar + " = " + props;
                     }
                 }
